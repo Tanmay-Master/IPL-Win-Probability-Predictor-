@@ -1,0 +1,9 @@
+streamlit
+matplotlib==3.9.2
+pandas
+numpy
+scikit-learn
+xgboost
+lightgbm
+seaborn
+pickle
