@@ -6,4 +6,4 @@ scikit-learn
 xgboost
 lightgbm
 seaborn
-pickle
+joblib
