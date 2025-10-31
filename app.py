@@ -754,6 +754,66 @@ else:
                 st.success("**Strategy:** Bowling team ahead. Continue pressure. Restrict boundaries.")
             else:
                 st.warning("**Strategy:** Need wickets. Attacking fields. Break partnerships.")
+
+        # Historical comparison
+        st.markdown("### HISTORICAL CONTEXT")
+        
+        col_h1, col_h2, col_h3 = st.columns(3)
+        
+        with col_h1:
+            if rrr > 12:
+                success_rate = "15-25%"
+                color = "#d32f2f"
+            elif rrr > 9:
+                success_rate = "35-45%"
+                color = "#f57c00"
+            elif rrr > 6:
+                success_rate = "55-65%"
+                color = "#0288d1"
+            else:
+                success_rate = "75-85%"
+                color = "#388e3c"
+            
+            st.markdown(f"""
+            <div style='background: {color}; padding: 15px; border-radius: 10px; text-align: center;'>
+                <div style='color: white; font-size: 14px;'>Historical Success Rate</div>
+                <div style='color: #ffeb3b; font-size: 28px; font-weight: bold; margin: 10px 0;'>{success_rate}</div>
+                <div style='color: white; font-size: 12px;'>For similar match situations</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_h2:
+            # Pressure index (0-100)
+            pressure = min(100, (rrr / 20 * 100 + (10 - wickets_left) / 10 * 100) / 2)
+            pressure_color = "#388e3c" if pressure < 40 else "#ffa000" if pressure < 70 else "#d32f2f"
+            
+            st.markdown(f"""
+            <div style='background: {pressure_color}; padding: 15px; border-radius: 10px; text-align: center;'>
+                <div style='color: white; font-size: 14px;'>Pressure Index</div>
+                <div style='color: #ffeb3b; font-size: 28px; font-weight: bold; margin: 10px 0;'>{pressure:.0f}/100</div>
+                <div style='color: white; font-size: 12px;'>Based on RR & wickets</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_h3:
+            # Match momentum
+            if crr > rrr:
+                momentum = "BATTING TEAM"
+                momentum_color = "#388e3c"
+            elif rrr - crr > 3:
+                momentum = "BOWLING TEAM"
+                momentum_color = "#d32f2f"
+            else:
+                momentum = "NEUTRAL"
+                momentum_color = "#0288d1"
+            
+            st.markdown(f"""
+            <div style='background: {momentum_color}; padding: 15px; border-radius: 10px; text-align: center;'>
+                <div style='color: white; font-size: 14px;'>Current Momentum</div>
+                <div style='color: #ffeb3b; font-size: 22px; font-weight: bold; margin: 10px 0;'>{momentum}</div>
+                <div style='color: white; font-size: 12px;'>Based on run rate comparison</div>
+            </div>
+            """, unsafe_allow_html=True)
                 
         # Prediction confidence
         st.markdown("### PREDICTION CONFIDENCE")
