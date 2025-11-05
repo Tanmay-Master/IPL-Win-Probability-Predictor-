@@ -91,7 +91,7 @@ st.markdown("""
         border-top: 4px solid #ff6b35;
     }
     
-    .model-selector {
+    .model-section {
         background: linear-gradient(135deg, #0f3460, #16213e);
         padding: 20px;
         border-radius: 12px;
@@ -221,6 +221,14 @@ st.markdown("""
     .stDataFrame {
         background: #16213e;
     }
+    
+    .model-card {
+        background: linear-gradient(135deg, #1a3a4a, #2a5a6a);
+        padding: 20px;
+        border-radius: 12px;
+        margin: 15px 0;
+        border-left: 5px solid #00d4ff;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -347,15 +355,15 @@ with st.sidebar:
     st.markdown("### ABOUT THIS PREDICTOR")
     st.info("This advanced AI-powered system utilizes state-of-the-art machine learning algorithms to analyze real-time match dynamics and deliver accurate win probability predictions.")
     
-    st.markdown("### AVAILABLE MODELS")
+    st.markdown("### ACTIVE MODELS")
     st.markdown("""
-    **Logistic Regression (LR)**
+    **✓ Logistic Regression (LR)**
     - Linear classification model
     - Fast computation
     - High interpretability
     - Excellent for linear separable data
     
-    **Random Forest (RF)**
+    **✓ Random Forest (RF)**
     - Ensemble learning method
     - Captures non-linear patterns
     - Robust to outliers
@@ -387,24 +395,11 @@ with st.sidebar:
     - Score: Must be less than target
     """)
 
-# Model selection section
-st.markdown('<div class="model-selector">', unsafe_allow_html=True)
-st.markdown("### MODEL SELECTION")
-
-col_model1, col_model2, col_model3 = st.columns(3)
-
-with col_model1:
-    use_lr = st.checkbox("Logistic Regression", value=True)
-with col_model2:
-    use_rf = st.checkbox("Random Forest", value=True)
-with col_model3:
-    show_comparison = st.checkbox("Comparison Mode")
-
+# Model information section
+st.markdown('<div class="model-section">', unsafe_allow_html=True)
+st.markdown("### ACTIVE MODELS")
+st.success("**All models are running simultaneously** - Logistic Regression and Random Forest algorithms are both analyzing the match situation to provide comprehensive predictions.")
 st.markdown('</div>', unsafe_allow_html=True)
-
-if not use_lr and not use_rf:
-    st.markdown('<div class="warning-message"><strong>Alert:</strong> Please select at least one model to proceed!</div>', unsafe_allow_html=True)
-    st.stop()
 
 # Main content area
 st.markdown("### TEAM SELECTION")
@@ -553,109 +548,82 @@ else:
             st.metric("Runs per Wicket Needed", f"{runs_per_wicket:.1f}", 
                      help="Average runs needed per remaining wicket")
 
-        # Get predictions from selected models
+        # Get predictions from ALL models
         predictions = {}
         
-        if use_lr:
-            lr_result = lr_pipe.predict_proba(input_df)
-            predictions['Logistic Regression'] = {
-                'batting': round(lr_result[0][1] * 100, 2),
-                'bowling': round(lr_result[0][0] * 100, 2)
-            }
+        # Always run both models
+        lr_result = lr_pipe.predict_proba(input_df)
+        predictions['Logistic Regression'] = {
+            'batting': round(lr_result[0][1] * 100, 2),
+            'bowling': round(lr_result[0][0] * 100, 2)
+        }
         
-        if use_rf:
-            rf_result = rf_pipe.predict_proba(input_df)
-            predictions['Random Forest'] = {
-                'batting': round(rf_result[0][1] * 100, 2),
-                'bowling': round(rf_result[0][0] * 100, 2)
-            }
+        rf_result = rf_pipe.predict_proba(input_df)
+        predictions['Random Forest'] = {
+            'batting': round(rf_result[0][1] * 100, 2),
+            'bowling': round(rf_result[0][0] * 100, 2)
+        }
 
-        # Display results
+        # Display results - ALWAYS show comparison
         st.markdown("### WIN PROBABILITY ANALYSIS")
-
-        if show_comparison and len(predictions) > 1:
-            st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
-            st.markdown("#### MODEL COMPARISON")
+        
+        st.markdown('<div class="comparison-container">', unsafe_allow_html=True)
+        st.markdown("#### MODEL COMPARISON")
+        
+        for idx, (model_name, probs) in enumerate(predictions.items()):
+            col_m1, col_m2 = st.columns(2)
             
-            for idx, (model_name, probs) in enumerate(predictions.items()):
-                col_m1, col_m2 = st.columns(2)
-                
-                with col_m1:
-                    st.markdown(f"""
-                    <div class="probability-card-batting">
-                        <div class="stat-label">Model: {model_name}</div>
-                        <div style='font-size: 20px; color: white; margin: 10px 0;'>{batting_team}</div>
-                        <div class="stat-value">{probs['batting']}%</div>
-                        <div class="stat-label">Win Probability</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_m2:
-                    st.markdown(f"""
-                    <div class="probability-card-bowling">
-                        <div class="stat-label">Model: {model_name}</div>
-                        <div style='font-size: 20px; color: white; margin: 10px 0;'>{bowling_team}</div>
-                        <div class="stat-value">{probs['bowling']}%</div>
-                        <div class="stat-label">Win Probability</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                if idx < len(predictions) - 1:
-                    st.divider()
+            with col_m1:
+                st.markdown(f"""
+                <div class="probability-card-batting">
+                    <div class="stat-label">Model: {model_name}</div>
+                    <div style='font-size: 20px; color: white; margin: 10px 0;'>{batting_team}</div>
+                    <div class="stat-value">{probs['batting']}%</div>
+                    <div class="stat-label">Win Probability</div>
+                </div>
+                """, unsafe_allow_html=True)
             
-            st.markdown('</div>', unsafe_allow_html=True)
+            with col_m2:
+                st.markdown(f"""
+                <div class="probability-card-bowling">
+                    <div class="stat-label">Model: {model_name}</div>
+                    <div style='font-size: 20px; color: white; margin: 10px 0;'>{bowling_team}</div>
+                    <div class="stat-value">{probs['bowling']}%</div>
+                    <div class="stat-label">Win Probability</div>
+                </div>
+                """, unsafe_allow_html=True)
             
-            # Average prediction
-            if len(predictions) == 2:
-                avg_batting = (predictions['Logistic Regression']['batting'] + predictions['Random Forest']['batting']) / 2
-                avg_bowling = (predictions['Logistic Regression']['bowling'] + predictions['Random Forest']['bowling']) / 2
-                
-                st.markdown("#### ENSEMBLE PREDICTION")
-                col_avg1, col_avg2 = st.columns(2)
-                
-                with col_avg1:
-                    st.markdown(f"""
-                    <div class="ensemble-box">
-                        <div class="stat-label">Ensemble Average</div>
-                        <div style='font-size: 22px; color: white; margin: 10px 0;'>{batting_team}</div>
-                        <div class="stat-value">{avg_batting:.2f}%</div>
-                        <div style='font-size: 14px; color: #B3E5FC; margin-top: 10px;'>Combined Model Prediction</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_avg2:
-                    st.markdown(f"""
-                    <div class="ensemble-box">
-                        <div class="stat-label">Ensemble Average</div>
-                        <div style='font-size: 22px; color: white; margin: 10px 0;'>{bowling_team}</div>
-                        <div class="stat-value">{avg_bowling:.2f}%</div>
-                        <div style='font-size: 14px; color: #B3E5FC; margin-top: 10px;'>Combined Model Prediction</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-        else:
-            # Show single model or first selected model
-            for model_name, probs in predictions.items():
-                col_result1, col_result2 = st.columns(2)
-
-                with col_result1:
-                    st.markdown(f"""
-                    <div class="probability-card-batting">
-                        <div class="stat-label">{model_name}</div>
-                        <div style='font-size: 24px; color: white; margin: 10px 0;'>{batting_team}</div>
-                        <div class="stat-value">{probs['batting']}%</div>
-                        <div class="stat-label">Winning Probability</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                with col_result2:
-                    st.markdown(f"""
-                    <div class="probability-card-bowling">
-                        <div class="stat-label">{model_name}</div>
-                        <div style='font-size: 24px; color: white; margin: 10px 0;'>{bowling_team}</div>
-                        <div class="stat-value">{probs['bowling']}%</div>
-                        <div class="stat-label">Winning Probability</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+            if idx < len(predictions) - 1:
+                st.divider()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Average prediction (Ensemble)
+        avg_batting = (predictions['Logistic Regression']['batting'] + predictions['Random Forest']['batting']) / 2
+        avg_bowling = (predictions['Logistic Regression']['bowling'] + predictions['Random Forest']['bowling']) / 2
+        
+        st.markdown("#### ENSEMBLE PREDICTION")
+        col_avg1, col_avg2 = st.columns(2)
+        
+        with col_avg1:
+            st.markdown(f"""
+            <div class="ensemble-box">
+                <div class="stat-label">Ensemble Average</div>
+                <div style='font-size: 22px; color: white; margin: 10px 0;'>{batting_team}</div>
+                <div class="stat-value">{avg_batting:.2f}%</div>
+                <div style='font-size: 14px; color: #B3E5FC; margin-top: 10px;'>Combined Model Prediction</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_avg2:
+            st.markdown(f"""
+            <div class="ensemble-box">
+                <div class="stat-label">Ensemble Average</div>
+                <div style='font-size: 22px; color: white; margin: 10px 0;'>{bowling_team}</div>
+                <div class="stat-value">{avg_bowling:.2f}%</div>
+                <div style='font-size: 14px; color: #B3E5FC; margin-top: 10px;'>Combined Model Prediction</div>
+            </div>
+            """, unsafe_allow_html=True)
 
         # Detailed metrics table
         st.markdown("### DETAILED MATCH ANALYSIS")
@@ -819,32 +787,31 @@ else:
         st.markdown("### PREDICTION CONFIDENCE")
         
         # Calculate confidence based on model agreement
-        if len(predictions) > 1:
-            diff = abs(predictions['Logistic Regression']['batting'] - predictions['Random Forest']['batting'])
-            if diff < 5:
-                confidence = "Very High"
-                conf_color = "#388e3c"
-                conf_text = "Both models strongly agree on the prediction."
-            elif diff < 10:
-                confidence = "High"
-                conf_color = "#0288d1"
-                conf_text = "Models show good agreement on the prediction."
-            elif diff < 20:
-                confidence = "Medium"
-                conf_color = "#ffa000"
-                conf_text = "Models show moderate variation in predictions."
-            else:
-                confidence = "Low"
-                conf_color = "#d32f2f"
-                conf_text = "Significant variation between model predictions. Situation uncertain."
-            
-            st.markdown(f"""
-            <div style='background: {conf_color}; padding: 20px; border-radius: 10px;'>
-                <h4 style='color: white; margin: 0;'>Confidence Level: {confidence}</h4>
-                <p style='color: white; margin: 10px 0 0 0;'>{conf_text}</p>
-                <p style='color: #ffeb3b; margin: 5px 0 0 0; font-size: 14px;'>Model Variance: {diff:.2f}%</p>
-            </div>
-            """, unsafe_allow_html=True)
+        diff = abs(predictions['Logistic Regression']['batting'] - predictions['Random Forest']['batting'])
+        if diff < 5:
+            confidence = "Very High"
+            conf_color = "#388e3c"
+            conf_text = "Both models strongly agree on the prediction."
+        elif diff < 10:
+            confidence = "High"
+            conf_color = "#0288d1"
+            conf_text = "Models show good agreement on the prediction."
+        elif diff < 20:
+            confidence = "Medium"
+            conf_color = "#ffa000"
+            conf_text = "Models show moderate variation in predictions."
+        else:
+            confidence = "Low"
+            conf_color = "#d32f2f"
+            conf_text = "Significant variation between model predictions. Situation uncertain."
+        
+        st.markdown(f"""
+        <div style='background: {conf_color}; padding: 20px; border-radius: 10px;'>
+            <h4 style='color: white; margin: 0;'>Confidence Level: {confidence}</h4>
+            <p style='color: white; margin: 10px 0 0 0;'>{conf_text}</p>
+            <p style='color: #ffeb3b; margin: 5px 0 0 0; font-size: 14px;'>Model Variance: {diff:.2f}%</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Timestamp
         st.markdown(f"""
